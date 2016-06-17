@@ -5,6 +5,7 @@ Flask==0.11.1
 Flask-Bootstrap==3.3.6.0
 Flask-Login==0.3.2
 Flask-Mail==0.9.1
+Flask-Moment==0.5.1
 Flask-SQLAlchemy==2.1
 Flask-WTF==0.12
 itsdangerous==0.24
