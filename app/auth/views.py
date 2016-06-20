@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .forms import LoginForm, RegistrationForm
+from .forms import LoginForm, RegistrationForm, ChangePasswordForm
 from . import auth
 from flask import render_template, redirect, url_for, request
 from ..models import User
@@ -96,6 +96,18 @@ def resend_confirmation():
     return redirect(url_for('main.index'))
 
 
+@auth.route('/Change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if current_user.verify_password(form.old_password.data):
+            current_user.password = form.new_password.data
+            db.session.add(current_user)
+            flash('密码已更新')
+        else:
+            flash('当前密码输入错误')
+    return render_template('auth/change_password.html', form=form)
 
 
 
