@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from .forms import LoginForm, RegistrationForm, ChangePasswordForm
+from .forms import ResetPasswordRequestForm, ResetPasswordForm
 from . import auth
 from flask import render_template, redirect, url_for, request
 from ..models import User
@@ -110,10 +111,40 @@ def change_password():
     return render_template('auth/change_password.html', form=form)
 
 
+@auth.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    if not current_user.is_anonymous:
+        return redirect(url_for('main.index'))
+    form = ResetPasswordRequestForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user is not None:
+            token = user.generate_reset_token()
+            send_email(
+                user.email, 'Reset Your Password', 'auth/email/reset_password',
+                token=token, user=user
+            )
+            flash('重设密码的邮件已发送至邮箱，请查收。')
+            return redirect(url_for('main.index'))
+        flash('这个Email木有注册哦~')
+    return render_template('auth/reset_password_request.html', form=form)
 
 
-
-
+@auth.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if not current_user.is_anonymous:
+        return redirect(url_for('main.index'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user is None:
+            flash('邮箱填写错误或该邮箱未注册')
+        if user.reset_password(token=token, new_password=form.password.data):
+            flash('密码已更新，请登录')
+            return redirect(url_for('auth.login'))
+        else:
+            return redirect(url_for('main.index'))
+    return render_template('auth/reset_password.html', form=form)
 
 
 

@@ -52,6 +52,17 @@ class ChangePasswordForm(Form):
     submit = SubmitField('修改密码')
 
 
+class ResetPasswordRequestForm(Form):
+    email = StringField('邮箱', validators=[DataRequired(), Length(1, 64), Email()])
+    submit = SubmitField('发送重设密码链接')
+
+
+class ResetPasswordForm(Form):
+    email = StringField('邮箱', validators=[DataRequired(), Length(1, 64),
+                                          Email()])
+    password = PasswordField('新密码', validators=[DataRequired(), Length(1, 64), EqualTo('password2', message='两次密码不匹配')])
+    password2 = PasswordField('确认新密码', validators=[DataRequired()])
+    submit = SubmitField('重设密码')
 
 
 

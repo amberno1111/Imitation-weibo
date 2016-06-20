@@ -9,5 +9,11 @@
 </div>
 <div class="col-md-4">
     {{ wtf.quick_form(form) }}
+    <p>
+        忘记密码？
+        <a href="{{ url_for('auth.reset_password_request') }}">
+            点击这里重设密码
+        </a>
+    </p>
 </div>
 {% endblock %}

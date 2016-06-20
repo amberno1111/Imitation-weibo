@@ -46,7 +46,25 @@ class User(db.Model, UserMixin):
         db.session.add(self)
         return True
 
-    
+    # 生成重设密码确认令牌
+    def generate_reset_token(self, expiration=3600):
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        return s.dumps({'reset':self.id})
+
+    # 验证重设密码确认令牌
+    def reset_password(self, token, new_password):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except ValueError:
+            return False
+        if data.get('reset') != self.id:
+            return False
+        self.password = new_password
+        db.session.add(self)
+        return True
+
+
 # 使用flask-login扩展必须提供的回调函数
 # 用于从会话中存储的ID加载用户对象
 # 接收一个用户id作为输入，返回相应的用户对象
