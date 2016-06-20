@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}Unconfirmed{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>请先验证您的账户</h1>
+    如果未收到验证邮件，或验证邮件已失效，请点击<a href="{{ url_for('auth.resend_confirmation') }}">重发验证邮件</a>
+    </div>
+{% endblock %}
