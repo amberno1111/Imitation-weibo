@@ -5,7 +5,6 @@ from wtforms.validators import Length, DataRequired, Email, Regexp
 from ..models import Role, User
 
 
-
 class EditProfileForm(Form):
     real_name = StringField('真实姓名', validators=[Length(0, 64)])
     location = StringField('所在城市', validators=[Length(0, 64)])
@@ -45,3 +44,7 @@ class EditProfileAdminForm(Form):
         if self.user.username != field.data and User.query.filter_by(username=field.data).first():
             raise ValidationError('用户名已被注册')
 
+
+class PostForm(Form):
+    body = TextAreaField('有什么新鲜事想告诉大家？', validators=[DataRequired()])
+    submit = SubmitField('发布')

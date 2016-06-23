@@ -28,6 +28,7 @@ class User(db.Model, UserMixin):
     about_me = db.Column(db.Text)
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
+    posts = db.relationship('Post', backref='author', lazy='dynamic')
 
     def ping(self):
         self.last_seen = datetime.utcnow()
@@ -98,6 +99,30 @@ class User(db.Model, UserMixin):
     def is_administrator(self):
         return self.can(Permission.ADMINISTRATOR)
 
+    # 生成虚拟用户
+    @staticmethod
+    def generate_fake(count=100):
+        from sqlalchemy.exc import IntegrityError
+        from random import seed
+        import forgery_py
+        seed()
+        for i in range(count):
+            user = User(
+                email=forgery_py.internet.email_address(),
+                username=forgery_py.internet.user_name(True),
+                password=forgery_py.lorem_ipsum.word(),
+                confirmed=True,
+                real_name=forgery_py.name.full_name(),
+                location=forgery_py.address.city(),
+                about_me=forgery_py.lorem_ipsum.sentence(),
+                member_since=forgery_py.date.date(True)
+                )
+            db.session.add(user)
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+
 
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -131,6 +156,35 @@ class AnonymousUser(AnonymousUserMixin):
 
     def is_administrator(self):
         return False
+
+login_manager.anonymous_user = AnonymousUser
+
+
+class Post(db.Model):
+    __tablename__ = 'posts'
+    # 博客文章包含内容，作者，时间戳
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    # 一个作者对应多篇文章，因此在多的这一侧建立外键
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    # 生成虚拟文章
+    @staticmethod
+    def generate_fake(count=100):
+        from random import seed, randint
+        import forgery_py
+        seed()
+        user_count = User.query.count()
+        for i in range(count):
+            user = User.query.offset(randint(0, user_count-1)).first()
+            post = Post(
+                body=forgery_py.lorem_ipsum.sentences(randint(1, 3)),
+                timestamp=forgery_py.date.date(True),
+                author=user
+             )
+            db.session.add(post)
+            db.session.commit()
 
 
 # 使用flask-login扩展必须提供的回调函数
