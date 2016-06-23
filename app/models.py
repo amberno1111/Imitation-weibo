@@ -5,6 +5,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
 from datetime import datetime
+from markdown import markdown
+import bleach
 
 
 class Permission:
@@ -165,9 +167,26 @@ class Post(db.Model):
     # 博客文章包含内容，作者，时间戳
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     # 一个作者对应多篇文章，因此在多的这一侧建立外键
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    # 转换文章，on_changed_body函数自动把body字段中的文本渲染成html格式
+    # 真正的转换过程分为三步，如下：
+    # 首先markdown()把文本转化为html
+    # 然后把得到的结果和允许使用的HTml标签列表传给clean函数，clean删除所有不在白名单中的标签
+    # 最后一步由linkify完成，把纯文本中的URL转换成<a>链接
+    @staticmethod
+    def on_changed_body(target, value, oldvalue, initiator):
+        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
+                        'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
+                        'h1', 'h2', 'h3', 'p']
+        target.body_html = bleach.linkify(bleach.clean(
+            markdown(value, output_format='html'),
+            tags=allowed_tags,
+            strip=True
+        ))
 
     # 生成虚拟文章
     @staticmethod
@@ -186,6 +205,9 @@ class Post(db.Model):
             db.session.add(post)
             db.session.commit()
 
+# on_changed_body()方法注册在SQLAlchemy的"set"事件监听程序上
+# 这意味着只要body这个字段设置了新值，函数就会被自动调用
+db.event.listen(Post.body, 'set', Post.on_changed_body)
 
 # 使用flask-login扩展必须提供的回调函数
 # 用于从会话中存储的ID加载用户对象
