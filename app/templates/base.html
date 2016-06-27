@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block navbar %}
-<div class="navbar navbar-inverse" role="navigation">
+<div class="navbar navbar-default" role="navigation">
     <div class="container">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -34,6 +34,7 @@
                         <a href="{{ url_for('auth.login') }}">Sign In</a>
                     </li>
                 {% endif %}
+                {% if current_user.is_authenticated %}
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         Account
@@ -44,13 +45,14 @@
                         <li>
                             <a href="{{ url_for('auth.change_password') }}">更改密码</a>
                         </li>
-                        {% if current_user.is_authenticated %}
+
                         <li>
                             <a href="{{ url_for('main.user_profile', username=current_user.username) }}">个人资料</a>
                         </li>
-                        {% endif %}
+
                     </ul>
                 </li>
+                {% endif %}
             </ul>
         </div>
     </div>
