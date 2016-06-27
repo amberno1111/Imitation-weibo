@@ -29,10 +29,10 @@
 {% endif %}
 
 <a href="{{ url_for('main.followers', username=user.username) }}">
-    Followers:<span class="badge">{{ user.followers.count() }}</span>
+    Followers:<span class="badge">{{ user.followers.count() - 1 }}</span>
 </a>
 <a href="{{ url_for('main.followed_by', username=user.username) }}">
-    Followed:<span class="badge">{{ user.followed.count() }}</span>
+    Followed:<span class="badge">{{ user.followed.count() - 1 }}</span>
 </a>
 <h3>
     Posts by {{ user.username }}

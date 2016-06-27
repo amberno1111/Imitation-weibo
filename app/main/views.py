@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from . import main
-from flask import render_template, abort, flash, redirect, url_for, request
+from flask import render_template, abort, flash, redirect, url_for, request, make_response
 from flask import current_app
 from datetime import datetime
 from ..models import User, Role, Permission, Post
@@ -24,14 +24,21 @@ def index():
         return redirect(url_for('main.index'))
     # posts = Post.query.order_by(Post.timestamp.desc()).all()
     page = request.args.get('page', 1, type=int)
+    show_followed = False
+    if current_user.is_authenticated:
+        show_followed = bool(request.cookies.get('show_followed', ''))
+    if show_followed:
+        query = current_user.followed_posts
+    else:
+        query = Post.query
     # 为了显示某页中的记录，需要使用flask-sqlalchemy提供的paginate方法
     # 页数是paginate方法的唯一必须参数提供的 paginate() 方法。
     # 可选参数 per_page 指定每页显示的记录数量；如果没有指定，则默认显示 20 个。
     # 另一个可选参数为 error_out，当其设为 True 时（默认值），如果请求的页数超出了范围，则会返回 404 错误；如果设为 False，页数超出范围时会返回一个空列表。
     # paginate()方法的返回值是一个Pagination类对象，这个类在flask-sqlalchemy中定义，items属性表示当前页面中的记录
-    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(page, per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
+    pagination = query.order_by(Post.timestamp.desc()).paginate(page, per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
     posts = pagination.items
-    return render_template('index.html', form=form, posts=posts, pagination=pagination)
+    return render_template('index.html', show_followed=show_followed, form=form, posts=posts, pagination=pagination)
 
 
 @main.route('/<username>')
@@ -176,8 +183,23 @@ def followed_by(username):
         title='Followers of', endpoint='main.followed_by')
 
 
+@main.route('/all')
+@login_required
+def show_all():
+    resp = make_response(redirect(url_for('main.index')))
+    # set_cookie函数的前两个参数分别是cookie的名和值
+    # max_age参数设置cookie过期时间，单位为秒，这里设置为1个月
+    # 这样就算关闭，浏览器也能记住cookie的值
+    resp.set_cookie('show_followed', '', max_age=30*24*60*60)
+    return resp
 
 
+@main.route('/followed')
+@login_required
+def show_followed():
+    resp = make_response(redirect(url_for('main.index')))
+    resp.set_cookie('show_followed', '1', max_age=30*24*60*60)
+    return resp
 
 
 

@@ -78,6 +78,7 @@ class User(db.Model, UserMixin):
     def __init__(self, **kwargs):
         # 先调用基类的构造函数
         super(User, self).__init__(**kwargs)
+        self.follow(self)
         if self.role is None:
             self.role = Role.query.filter_by(default=True).first()
 
@@ -164,6 +165,20 @@ class User(db.Model, UserMixin):
             except IntegrityError:
                 db.session.rollback()
 
+    # 获取用户关注的文章
+    @property
+    def followed_posts(self):
+        return Post.query.join(Follow, Follow.followed_id == Post.author_id).filter(Follow.follower_id == self.id)
+
+    # 把用户设置为自己的关注者
+    @staticmethod
+    def add_self_follows():
+        for user in User.query.all():
+            if not user.is_following(user):
+                user.follow(user)
+                db.session.add(user)
+                db.session.commit()
+
 
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -247,6 +262,7 @@ class Post(db.Model):
 # on_changed_body()方法注册在SQLAlchemy的"set"事件监听程序上
 # 这意味着只要body这个字段设置了新值，函数就会被自动调用
 db.event.listen(Post.body, 'set', Post.on_changed_body)
+
 
 # 使用flask-login扩展必须提供的回调函数
 # 用于从会话中存储的ID加载用户对象
