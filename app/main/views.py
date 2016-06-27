@@ -7,7 +7,7 @@ from ..models import User, Role, Permission, Post
 from flask_login import login_required, current_user
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm
 from .. import db
-from ..decorators import admin_required
+from ..decorators import admin_required, permission_required
 
 
 @main.route('/', methods=['GET', 'POST'])
@@ -106,3 +106,80 @@ def edit(id):
         return redirect(url_for('.post', id=post.id))
     form.body.data = post.body
     return render_template('edit_post.html', form=form)
+
+
+@main.route('/follow/<username>')
+@login_required
+@permission_required(Permission.FOLLOW)
+def follow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('用户不存在')
+        return redirect(url_for('main.index'))
+    if current_user.is_following(user):
+        flash('你已经关注了此用户')
+        return redirect(url_for('main.user_profile', username=user.username))
+    current_user.follow(user)
+    flash('你成功关注了%s' % user.username)
+    return redirect(url_for('main.user_profile', username=user.username))
+
+
+@main.route('/unfollow/<username>')
+@login_required
+@permission_required(Permission.FOLLOW)
+def unfollow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('用户不存在')
+        return redirect(url_for('main.index'))
+    if not current_user.is_following(user):
+        flash('你没有关注这个用户')
+        return redirect(url_for('main.index'))
+    current_user.unfollow(user)
+    flash('你已经取消关注了%s' % user.username)
+    return redirect(url_for('main.index'))
+
+
+@main.route('/followers/<username>')
+def followers(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('此用户不存在')
+        return redirect(url_for('main.index'))
+    page = request.args.get('page', 1, type=int)
+    pagination = user.followers.paginate(
+        page, per_page=current_app.config['FOLLOWERS_PER_PAGE'], error_out=False)
+    follows = [
+        {'user': item.follower, 'timestamp': item.timestamp}
+        for item in pagination.items]
+    return render_template(
+        'followers.html', user=user,
+        pagination=pagination, follows=follows,
+        title='Followers of', endpoint='main.followers')
+
+
+@main.route('/followed_by/<username>')
+def followed_by(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('用户不存在')
+        return redirect(url_for('main.index'))
+    page = request.args.get('page', 1, type=int)
+    pagination = user.followed.paginate(
+        page, per_page=current_app.config['FOLLOWERS_PER_PAGE'], error_out=False)
+    follows = [
+        {'user': item.followed, 'timestamp': item.timestamp}
+        for item in pagination.items]
+    return render_template(
+        'followers.html', user=user,
+        pagination=pagination, follows=follows,
+        title='Followers of', endpoint='main.followed_by')
+
+
+
+
+
+
+
+
+

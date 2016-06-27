@@ -15,6 +15,7 @@ class Config:
     MAIL_DEFAULT_SENDER = 'testflask@sina.com'
     EMAIL_PREFIX = '[Imatation-weibo]'
     POSTS_PER_PAGE = 20
+    FOLLOWERS_PER_PAGE = 10
 
     @staticmethod
     def init_app(app):

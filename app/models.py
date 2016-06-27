@@ -17,6 +17,14 @@ class Permission:
     ADMINISTRATOR = 0xff
 
 
+class Follow(db.Model):
+    __tablename__ = 'follows'
+    # 可以把多个键标记为主键，此时它们作为复合主键
+    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -31,6 +39,37 @@ class User(db.Model, UserMixin):
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
     posts = db.relationship('Post', backref='author', lazy='dynamic')
+    # 使用foreign_keys明确指明外键，防止歧义
+    followers = db.relationship(
+        'Follow',
+        foreign_keys = [Follow.followed_id],
+        backref= db.backref('followed', lazy='joined'),
+        lazy='dynamic',
+        cascade = 'all, delete-orphan'
+    )
+    followed = db.relationship(
+        'Follow',
+        foreign_keys = [Follow.follower_id],
+        backref = db.backref('follower', lazy='joined'),
+        lazy='dynamic',
+        cascade = 'all, delete-orphan'
+    )
+
+    def follow(self, user):
+        if not self.is_following(user):
+            f = Follow(follower=self, followed=user)
+            db.session.add(f)
+
+    def unfollow(self, user):
+        f = self.followed.filter_by(followed_id=user.id).first()
+        if f is not None:
+            db.session.delete(f)
+
+    def is_following(self, user):
+        return self.followed.filter_by(followed_id=user.id).first() is not None
+
+    def is_followed_by(self, user):
+        return self.followers.filter_by(follower_id=user.id).first() is not None
 
     def ping(self):
         self.last_seen = datetime.utcnow()
