@@ -1,298 +1,360 @@
 # -*- coding: utf-8 -*-
-from . import db, login_manager
-from flask_login import UserMixin, AnonymousUserMixin
+from app import db, login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from flask_login import UserMixin, AnonymousUserMixin
+from itsdangerous import TimedJSONWebSignatureSerializer
 from flask import current_app
 from datetime import datetime
-from markdown import markdown
-import bleach
 
 
 class Permission:
     FOLLOW = 0x01
-    COMMENTS = 0x02
-    WRITE_ARTICLES = 0x03
-    MODERATE_COMMENTS = 0x10
-    ADMINISTRATOR = 0xff
+    COMMENT = 0x02
+    WRITE_ARTICLE = 0x04
+    MODERATE_COMMENTS = 0x08
+    ADMINISTER = 0x80
 
 
 class Follow(db.Model):
-    __tablename__ = 'follows'
-    # 可以把多个键标记为主键，此时它们作为复合主键
-    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    """
+    关注关联表
+    """
+    __tablesname__ = 'follows'
+    followed_id = db.Column(
+        db.Integer, db.ForeignKey('users.id'), primary_key=True, index=True)
+    follower_id = db.Column(
+        db.Integer, db.ForeignKey('users.id'), primary_key=True, index=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class User(db.Model, UserMixin):
+    """
+    User模型
+    """
     __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, index=True)
     email = db.Column(db.String(64), unique=True, index=True)
     username = db.Column(db.String(64), unique=True, index=True)
     password_hash = db.Column(db.String(128))
-    confirmed = db.Column(db.Boolean, default=False)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     real_name = db.Column(db.String(64))
     location = db.Column(db.String(64))
-    about_me = db.Column(db.Text)
+    about_me = db.Column(db.Text(512))
+    avatar = db.Column(db.String(128), default='avatar.jpg')
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
-    last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
     posts = db.relationship('Post', backref='author', lazy='dynamic')
-    # 使用foreign_keys明确指明外键，防止歧义
-    followers = db.relationship(
-        'Follow',
-        foreign_keys = [Follow.followed_id],
-        backref= db.backref('followed', lazy='joined'),
-        lazy='dynamic',
-        cascade = 'all, delete-orphan'
-    )
     followed = db.relationship(
-        'Follow',
-        foreign_keys = [Follow.follower_id],
-        backref = db.backref('follower', lazy='joined'),
-        lazy='dynamic',
-        cascade = 'all, delete-orphan'
-    )
-
-    def follow(self, user):
-        if not self.is_following(user):
-            f = Follow(follower=self, followed=user)
-            db.session.add(f)
-
-    def unfollow(self, user):
-        f = self.followed.filter_by(followed_id=user.id).first()
-        if f is not None:
-            db.session.delete(f)
-
-    def is_following(self, user):
-        return self.followed.filter_by(followed_id=user.id).first() is not None
-
-    def is_followed_by(self, user):
-        return self.followers.filter_by(follower_id=user.id).first() is not None
-
-    def ping(self):
-        self.last_seen = datetime.utcnow()
-        db.session.add(self)
+        'Follow', foreign_keys=[Follow.follower_id],
+        backref=db.backref('follower', lazy='joined'),
+        lazy='dynamic', cascade='all, delete-orphan')
+    followers = db.relationship(
+        'Follow', foreign_keys=[Follow.followed_id],
+        backref=db.backref('followed', lazy='joined'),
+        lazy='dynamic', cascade='all, delete-orphan')
+    comments = db.relationship('Comment', backref='author', lazy='dynamic')
 
     def __init__(self, **kwargs):
-        # 先调用基类的构造函数
+        """
+        :summary: User模型初始化函数，生成用户时自动赋予角色，创建用户的数据文件夹，super()函数继承父类，
+        :param kwargs:
+        """
         super(User, self).__init__(**kwargs)
-        self.follow(self)
         if self.role is None:
             self.role = Role.query.filter_by(default=True).first()
 
-    # 设置password的只写不可读属性
+    # 设置password的可写不可读
     @property
-    def password(self, password):
-        raise AttributeError('Password is not a readable attribute.')
+    def password(self):
+        raise AttributeError('密码是一个不可读的属性')
 
     @password.setter
     def password(self, password):
         self.password_hash = generate_password_hash(password)
 
-    # 检验密码
+    # 验证密码
     def verify_password(self, password):
+        """
+        :summary: 验证密码
+        :param password:
+        :return:
+        """
         return check_password_hash(self.password_hash, password)
 
-
-    # 生成账户确认令牌
-    def generate_confirmation_token(self, expiration=3600):
-        s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'confirm': self.id})
-
-    # 验证账户确认令牌
-    def confirm(self, token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except ValueError:
-            return False
-        if data.get('confirm') != self.id:
-            return False
-        self.confirmed = True
-        db.session.add(self)
-        return True
-
-    # 生成重设密码确认令牌
     def generate_reset_token(self, expiration=3600):
-        s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'reset':self.id})
+        """
+        :summary: 生成重设密码的token
+        :param expiration:  token失效时间，单位为秒
+        :return:
+        """
+        s = TimedJSONWebSignatureSerializer(
+            secret_key=current_app.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'reset_password': self.id})
 
-    # 验证重设密码确认令牌
     def reset_password(self, token, new_password):
-        s = Serializer(current_app.config['SECRET_KEY'])
+        """
+        :summary: 验证token并重设密码
+        :param token:
+        :param new_password:
+        :return:
+        """
+        s = TimedJSONWebSignatureSerializer(
+            secret_key=current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
-        except ValueError:
+        except:
             return False
-        if data.get('reset') != self.id:
+        if data.get('reset_password') != self.id:
             return False
         self.password = new_password
         db.session.add(self)
         return True
 
-    # 角色验证
     def can(self, permissions):
-        return self.role is not None \
-               and (self.role.permissions & permissions) == permissions
+        """
+        :summary: 检查用户是否具有指定的权限，使用位与操作来实现
+        :param permissions:
+        :return:
+        """
+        return self.role is not None and (
+            self.role.permissions & permissions) == permissions
 
-    # 管理员验证
     def is_administrator(self):
-        return self.can(Permission.ADMINISTRATOR)
+        """
+        :summary: 检查管理员权限的功能经常用到，因此使用单独的方法 is_administrator() 实现
+        :return:
+        """
+        return self.can(Permission.ADMINISTER)
 
-    # 生成虚拟用户
     @staticmethod
-    def generate_fake(count=100):
-        from sqlalchemy.exc import IntegrityError
+    def create_fake(count=100):
+        """
+        :summary: 创建虚假的用户数据
+        :param count: 数量
+        :return:
+        """
         from random import seed
         import forgery_py
+        from sqlalchemy.exc import IntegrityError
         seed()
         for i in range(count):
-            user = User(
+            u = User(
                 email=forgery_py.internet.email_address(),
                 username=forgery_py.internet.user_name(True),
                 password=forgery_py.lorem_ipsum.word(),
-                confirmed=True,
                 real_name=forgery_py.name.full_name(),
                 location=forgery_py.address.city(),
                 about_me=forgery_py.lorem_ipsum.sentence(),
                 member_since=forgery_py.date.date(True)
-                )
-            db.session.add(user)
+            )
+            db.session.add(u)
+            # 因为用户名和邮箱只能是唯一的，而随机生成的数据可能会重复
+            # 因此在数据库提交的时候会引发IntegrityError错误使得程序停止运行
+            # 这里使用try来捕获这个异常并且回滚数据库操作，就能保证正常运行
             try:
                 db.session.commit()
             except IntegrityError:
                 db.session.rollback()
 
-    # 获取用户关注的文章
-    @property
-    def followed_posts(self):
-        return Post.query.join(Follow, Follow.followed_id == Post.author_id).filter(Follow.follower_id == self.id)
-
-    # 把用户设置为自己的关注者
     @staticmethod
     def add_self_follows():
-        for user in User.query.all():
-            if not user.is_following(user):
-                user.follow(user)
-                db.session.add(user)
-                db.session.commit()
+        """
+        :summary: 让用户把自己设置为关注者
+        :return:
+        """
+        for u in User.query.all():
+            if not u.is_following(u):
+                u.follow(u)
+        db.session.add(u)
+        db.session.commit()
+
+    def follow(self, user):
+        """
+        :summary: 关注一个用户
+        :param user:
+        :return:
+        """
+        if not self.is_following(user):
+            f = Follow(follower=self, followed=user)
+            db.session.add(f)
+
+    def unfollow(self, user):
+        """
+        :summary: 取消关注一个用户
+        :param user:
+        :return:
+        """
+        f = self.followed.filter_by(followed_id=user.id).first()
+        if f:
+            db.session.delete(f)
+
+    def is_following(self, user):
+        """
+        :summary: 判断是否正在关注某个用户
+        :param user:
+        :return:
+        """
+        f = self.followed.filter_by(followed_id=user.id).first()
+        return f is not None
+
+    def is_followed_by(self, user):
+        """
+        :summary: 判断是否被某个用户关注
+        :param user:
+        :return:
+        """
+        f = self.followers.filter_by(follower_id=user.id).first()
+        return f is not None
+
+    @property
+    def followed_posts(self):
+        """
+        :summary: 获取所关注用户的微博，使用@property装饰器将该方法定义为属性，则在调用时候就可以不用加()
+        :return:
+        """
+        return Post.query.join(
+            Follow, Follow.followed_id == Post.author_id).filter(
+            Follow.follower_id == self.id)
+
+    # def generate_confirm_token(self, expiration=3600):
+    #     """
+    #     :summary: 生成账户认证token的函数
+    #     :param expiration: token失效时间，单位为秒
+    #     :return:
+    #     """
+    #     s = TimedJSONWebSignatureSerializer(
+    #           current_app.config['SECRET_KEY'], expires_in=expiration)
+    #     return s.dumps({'confirm': self.id})
+    #
+    # def confirm_confirmation_token(self, token):
+    #     """
+    #     :summary: 验证账户认证token
+    #     :param token:
+    #     :return:
+    #     """
+    #     s = TimedJSONWebSignatureSerializer(current_app.config['SECRET_KEY'])
+    #     try:
+    #         data = s.loads(token)
+    #     except:
+    #         return False
+    #     if data.get('confirm') != self.id:
+    #         return False
+    #     self.confirmed = True
+    #     db.session.add(self)
+    #     return True
+
+
+class AnonymousUser(AnonymousUserMixin):
+    """
+    出于一致性考虑，还定义了 AnonymousUser 类，并实现了 can() 方法和 is_administrator()方法。
+    这个对象继承自 Flask-Login 中的 AnonymousUserMixin 类，并将其设为用户未登录时current_user 的值。
+    这样程序不用先检查用户是否登录，就能自由调用 current_user.can() 和current_user.is_administrator()。
+    否则如果不先检查用户是否登录就调用权限检查函数，就会报错
+    """
+
+    def can(self, permissions):
+        """
+        :summary: 检查匿名用户是否具有指定的权限，直接返回False
+        :param permissions:
+        :return:
+        """
+        return False
+
+    def is_administrator(self):
+        """
+        :summary: 检查匿名用户是否具有指定的权限，直接返回False
+        :return:
+        """
+        return False
+
+
+login_manager.anonymous_user = AnonymousUser
 
 
 class Role(db.Model):
+    """
+    用户角色模型
+    """
     __tablename__ = 'roles'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), index=True, unique=True)
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    name = db.Column(db.String(64), unique=True, index=True)
     default = db.Column(db.Boolean, default=False, index=True)
     permissions = db.Column(db.Integer, index=True)
     users = db.relationship('User', backref='role', lazy='dynamic')
 
     @staticmethod
-    def create_roles():
+    def insert_roles():
+        """
+        :summary: 插入用户角色
+        :return:
+        """
         roles = {
-            'User': (Permission.FOLLOW|Permission.COMMENTS|Permission.WRITE_ARTICLES, True),
-            'Moderator': (Permission.FOLLOW|Permission.COMMENTS|Permission.WRITE_ARTICLES|Permission.MODERATE_COMMENTS, False),
-            'Administrator': (0xff, False)
+            'User': (
+                Permission.FOLLOW |
+                Permission.COMMENT |
+                Permission.WRITE_ARTICLE, True),
+            'Moderator': (
+                Permission.FOLLOW |
+                Permission.COMMENT |
+                Permission.WRITE_ARTICLE |
+                Permission.MODERATE_COMMENTS, False),
+            'Administrator': (Permission.ADMINISTER, False)
         }
         for r in roles:
             role = Role.query.filter_by(name=r).first()
             if role is None:
                 role = Role(name=r)
-            role.default = roles[r][1]
             role.permissions = roles[r][0]
+            role.default = roles[r][1]
             db.session.add(role)
         db.session.commit()
 
 
-class AnonymousUser(AnonymousUserMixin):
-
-    def can(self, permissions):
-        return False
-
-    def is_administrator(self):
-        return False
-
-login_manager.anonymous_user = AnonymousUser
-
-
 class Post(db.Model):
-    __tablename__ = 'posts'
-    # 博客文章包含内容，作者，时间戳
-    id = db.Column(db.Integer, primary_key=True)
+    """
+    文章模型
+    """
+    __tablename__ = "posts"
+    id = db.Column(db.Integer, primary_key=True, index=True)
     body = db.Column(db.Text)
-    body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    # 一个作者对应多篇文章，因此在多的这一侧建立外键
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    comments = db.relationship('Comment', backref='post', lazy='dynamic')
 
-    # 转换文章，on_changed_body函数自动把body字段中的文本渲染成html格式
-    # 真正的转换过程分为三步，如下：
-    # 首先markdown()把文本转化为html
-    # 然后把得到的结果和允许使用的HTml标签列表传给clean函数，clean删除所有不在白名单中的标签
-    # 最后一步由linkify完成，把纯文本中的URL转换成<a>链接
     @staticmethod
-    def on_changed_body(target, value, oldvalue, initiator):
-        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
-                        'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
-                        'h1', 'h2', 'h3', 'p']
-        target.body_html = bleach.linkify(bleach.clean(
-            markdown(value, output_format='html'),
-            tags=allowed_tags,
-            strip=True
-        ))
-
-    # 生成虚拟文章
-    @staticmethod
-    def generate_fake(count=100):
+    def create_fake(count=100):
+        """
+        :summary: 创建虚拟的文章
+        :param count:
+        :return:
+        """
         from random import seed, randint
         import forgery_py
         seed()
         user_count = User.query.count()
         for i in range(count):
-            user = User.query.offset(randint(0, user_count-1)).first()
-            post = Post(
+            u = User.query.offset(randint(0, user_count - 1)).first()
+            p = Post(
                 body=forgery_py.lorem_ipsum.sentences(randint(1, 3)),
                 timestamp=forgery_py.date.date(True),
-                author=user
-             )
-            db.session.add(post)
+                author=u
+            )
+            db.session.add(p)
             db.session.commit()
 
-# on_changed_body()方法注册在SQLAlchemy的"set"事件监听程序上
-# 这意味着只要body这个字段设置了新值，函数就会被自动调用
-db.event.listen(Post.body, 'set', Post.on_changed_body)
 
-
-# 使用flask-login扩展必须提供的回调函数
-# 用于从会话中存储的ID加载用户对象
-# 接收一个用户id作为输入，返回相应的用户对象
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+class Comment(db.Model):
+    """
+    comments model
+    """
+    __tablename__ = 'comments'
+    id = db.Column(db.Integer, primary_key=True, index=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    disabled = db.Column(db.Boolean)
+    body = db.Column(db.Text)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))

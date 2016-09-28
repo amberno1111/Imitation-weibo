@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block navbar %}
+{% endblock %}
+{% block page_content %}
+<div class="container w-xxl w-auto-xs" ng-init="app.settings.container = false;">
+  <div class="text-center m-b-lg">
+    <h1 class="text-shadow text-white">500</h1>
+      <p>服务器出现错误了</p>
+  </div>
+  <div class="list-group bg-info auto m-b-sm m-b-lg">
+    <a href="{{ url_for('main.index') }}" class="list-group-item">
+      <i class="fa fa-chevron-right text-muted"></i>
+      <i class="fa fa-fw fa-mail-forward m-r-xs"></i>首页
+    </a>
+    <a ui-sref="access.signin" class="list-group-item" href="{{ url_for('auth.login') }}">
+      <i class="fa fa-chevron-right text-muted"></i>
+      <i class="fa fa-fw fa-sign-in m-r-xs"></i> 登录
+    </a>
+    <a ui-sref="access.signup" class="list-group-item" href="{{ url_for('auth.register') }}">
+      <i class="fa fa-chevron-right text-muted"></i>
+      <i class="fa fa-fw fa-unlock-alt m-r-xs"></i> 注册
+    </a>
+  </div>
+  <div class="text-center" ng-include="'tpl/blocks/page_footer.html'"></div>
+</div>
+    {% block right_sidebar %}
+
+    {% endblock %}
+{% endblock %}

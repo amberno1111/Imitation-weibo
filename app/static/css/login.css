@@ -1,0 +1,270 @@
+html{
+            padding: 0;
+            margin: 0 ;
+            height: 100% !important;
+        }
+        body{
+            margin: 0;
+            height: 100%;
+            color: #555;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            background: #f7fafc;
+        }
+        input, button{
+            outline: none;
+        }
+        a{
+            text-decoration: none;
+        }
+        .logo{
+            margin: 0 auto;
+            width: 160px;
+            height: 74px;
+            background: url("../img/login-logo.png") no-repeat;
+            text-align: center;
+            background-size: contain;
+        }
+        .subtitle{
+            margin: 30px 0 20px;
+            font-weight: 400;
+            font-size: 18px;
+            line-height: 1;
+            text-align: center;
+        }
+        .index-main{
+            width: 100%;
+            height: 100%;
+            //margin-bottom: 42px;
+            text-align: center;
+        }
+        .index-main:before{
+            content: "";
+            display: inline-block;
+            height: 100%;
+            vertical-align: middle;
+        }
+        .index-main-body{
+            padding: 0;
+            display: inline-block;
+            vertical-align: middle;
+            width: 300px;
+            min-height: 590px;
+            margin: auto;
+        }
+        .index-header{
+            text-align: center;
+        }
+        .index-main-body p{
+            width: inherit;
+            text-align: center;
+            opacity: 0.5;
+        }
+        .sign-nav{
+            position: relative;
+            text-align: center;
+            font-size: 18px;
+            color: black;
+            margin-bottom: 10px;
+        }
+        .sign-nav a{
+            float: left;
+            display: inline-block;
+            width: 4em;
+            line-height: 35px;
+            text-decoration: none;
+            opacity: 0.6;
+            transition: opacity 0.5s;
+            color: inherit;
+        }
+        .sign-nav a:hover{
+            opacity: 1;
+        }
+        .sign-nav a.active{
+            opacity: 1;
+            color: #0f88eb;
+        }
+        .nav-slider-bar{
+            position: absolute;
+            margin: 0 0.8em;
+            background: #0f88eb;
+            height: 2px;
+            width: 2.4em;
+            left: 0;
+            bottom: 0;
+            transition: left .15s linear;
+        }
+        .sign-nav[data-index="1"] .nav-slider-bar{
+            left: 4em;
+        }
+        .group-input{
+            border: 1px solid #d5d5d5;
+            border-radius: 3px;
+        }
+        .input-wrapper{
+            margin: 0;
+            position: relative;
+        }
+        div.input-wrapper input{
+            width: 100%;
+            padding: 1em 0.8em;
+            line-height: 19px;
+            box-sizing: border-box;
+            color: #555;
+            border: 0;
+        }
+        .input-wrapper + .input-wrapper{
+            border-top: 1px solid #e8e8e8;
+        }
+        .button-wrapper{
+            margin-top: 18px;
+            display: block;
+        }
+        .sign-btn{
+            background: #0f88eb;
+            line-height: 41px;
+            color: white;
+            border-radius: 3px;
+            width: 100%;
+            font-size: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: 0;
+        }
+        .signin-misc-wrapper, .weibo-signup-wrapper{
+            margin-top: 18px;
+            display: block;
+        }
+        .signin-misc-wrapper .remember-me{
+            float: left;
+        }
+        .signin-misc-wrapper .unable-login{
+            float: right;
+            color: inherit;
+        }
+        .clearFix:after, .clearFix:before{
+            content: "";
+            display: block;
+            clear: both;
+            visibility: hidden;
+            line-height: 0;
+            height: 0;
+            font-size: 0;
+        }
+        .js-toggle-sns-btn{
+            cursor: pointer;
+            float: left;
+            display: block;
+        }
+        .sns-btn > a{
+            margin: 0 25px 0 0;
+        }
+        .weibo-signup-wrapper a{
+            opacity: 0.7;
+            -webkit-transition: opacity 0.15s;
+        }
+        .weibo-signup-wrapper a:hover{
+            opacity: 1;
+        }
+        [class ^='sprite-sns-'] {
+            background: url("img/sns.png") no-repeat;
+            display: inline-block;
+            width: 20px;
+            height: 18px;
+        }
+        .sprite-sns-wechat{
+            background-position: -56px -20px;
+        }
+        .sprite-sns-weibo{
+            background-position: 0px -44px;
+        }
+        .sprite-sns-qq{
+            background-position: -56px 0px;
+        }
+        .sns-btn{
+            display: inline-block;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity .25s ease-out, transform 0.25s ease-out, -webkit-transform 0.25s ease-out;
+            visibility: hidden;
+        }
+        .sns-visible{
+            opacity: 1;
+            transform: none;
+        }
+        .QRCode{
+            margin-top: 18px;
+            position: relative;
+        }
+        .QRCode-toggle{
+            display: block;
+            color: #5fa6e5;
+            height: 41px;
+            width: 100%;
+            line-height: 39px;
+            border: 1px solid #96c2e9;
+            outline: 0;
+            cursor: pointer;
+            background: 0;
+            border-radius: 3px;
+        }
+        .QRCode-card{
+            visibility: hidden;
+            position: absolute;
+            left: -5px;
+            bottom: 50px;
+            width: 310px;
+            height: 310px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+            transition: opacity .25s ease-out, transform 0.25s ease-out, -webkit-transform 0.25s ease-out;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .QRCode-visible{
+            opacity: 1;
+            transform: none;
+        }
+        .QRCode-image{
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("img/qr-code.png");
+            background-position: center;
+            background-size: contain;
+            background-repeat: no-repeat;
+            width: 250px;
+            height: 250px;
+            margin: auto;
+        }
+        .captcha-module img{
+            position: absolute;
+            right: 0.5em;
+            margin-top: -19px;
+            top: 50%;
+            width: 100px;
+            height: 38px;
+        }
+
+        .footer{
+            position: fixed;
+            width: 100%;
+            left: 0;
+            bottom: 0;
+            font-size: 12px;
+            line-height: 42px;
+            text-align: center;
+        }
+        .footer a, .footer span{
+            color: #aebdc9;
+        }
+        .dot{
+            margin: 0 3px;
+        }

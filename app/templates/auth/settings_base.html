@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}{{ current_user.username }}{% endblock %}
+
+{% block content %}
+    <div class="container main-page">
+        {% for message in get_flashed_messages() %}
+            <div class="alert alert-warning">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                {{ message }}
+            </div>
+        {% endfor %}
+        <div class="hbox hbox-auto-xs hbox-auto-sm">
+
+            <div class="col w-sm lt b-r hidden-print hidden-xs hidden-sm">
+                <div class="vbox">
+                    <div class="wrapper">
+                        <a href class="pull-right btn btn-sm btn-info m-t-n-xs" ng-click="createNote()">Admin</a>
+                        <div class="h4">设置</div>
+                    </div>
+                    <div class="wrapper b-t m-t-xxs">
+                    </div>
+                    <div class="row-row">
+                        <div class="cell">
+                            <div class="cell-inner">
+
+                                <div class="padder">
+                                    <div class="list-group">
+                                        <a  class="list-group-item  b-l-3x hover-anchor" href="{{ url_for('auth.edit_profile') }}" >
+                                            <span class="pull-right text-muted hover-action"></span>
+                                            <span class="block text-ellipsis" style="text-align:center">修改资料</span>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="padder">
+                                    <div class="list-group">
+                                        <a  class="list-group-item b-l-3x hover-anchor" href="{{ url_for('auth.change_password') }}" >
+                                            <span class="pull-right text-muted hover-action"></span>
+                                            <span class="block text-ellipsis" style="text-align:center">修改密码</span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /column -->
+            <!-- 中间表单column -->
+            <div class="col">
+                <div class="vbox">
+                    <div class="wrapper bg-light lt b-b">
+                        <span class="text-muted">虎皮踩踩的资料</span>
+                    </div>
+                    <div class="row-row">
+                        <div class="cell">
+                            <div class="cell-inner">
+                                <div class="wrapper-md" ng-controller="FormDemoCtrl">
+                                    <div class="row">
+                                        <div class="col-sm-1"></div>
+                                        <div class="col-sm-8">
+                                            <!-- 中间部分需要修改的表单 -->
+                                            {% block middle_form %}
+
+                                            {% endblock %}
+                                        </div>
+                                        <div class="col-sm-1"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /column -->
+
+            <!-- 这些属性可以使得在屏幕变小的时候，自动隐藏右边的栏 -->
+            <div class="col w-lg bg-light lter b-l bg-auto hidden-print hidden-xs hidden-sm">
+                <div class="wrapper">
+                    <!-- Who to Follow -->
+                    <div class="">
+                        <h4 class="m-t-xs m-b-xs">Who to follow</h4>
+                        <ul class="list-group no-bg no-borders pull-in">
+                            <li class="list-group-item">
+                                <a herf class="pull-left thumb-sm avatar m-r">
+                                    <img src="{{ url_for('static', filename='img/a4.jpg') }}" alt="..." class="img-circle">
+                                    <i class="on b-white bottom"></i>
+                                </a>
+                                <div class="clear">
+                                    <div><a href>Chris Fox</a></div>
+                                    <small class="text-muted">Designer, Blogger</small>
+                                </div>
+                            </li>
+                            <li class="list-group-item">
+                                <a herf class="pull-left thumb-sm avatar m-r">
+                                    <img src="{{ url_for('static', filename='img/a5.jpg') }}" alt="..." class="img-circle">
+                                    <i class="on b-white bottom"></i>
+                                </a>
+                                <div class="clear">
+                                    <div><a href>Mogen Polish</a></div>
+                                    <small class="text-muted">Writter, Mag Editor</small>
+                                </div>
+                            </li>
+                            <li class="list-group-item">
+                                <a herf class="pull-left thumb-sm avatar m-r">
+                                    <img src="{{ url_for('static', filename='img/a6.jpg') }}" alt="..." class="img-circle">
+                                    <i class="busy b-white bottom"></i>
+                                </a>
+                                <div class="clear">
+                                    <div><a href>Joge Lucky</a></div>
+                                    <small class="text-muted">Art director, Movie Cut</small>
+                                </div>
+                            </li>
+                            <li class="list-group-item">
+                                <a herf class="pull-left thumb-sm avatar m-r">
+                                    <img src="{{ url_for('static', filename='img/a7.jpg') }}" alt="..." class="img-circle">
+                                    <i class="away b-white bottom"></i>
+                                </a>
+                                <div class="clear">
+                                    <div><a href>Folisise Chosielie</a></div>
+                                    <small class="text-muted">Musician, Player</small>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Latest Tweets -->
+                    <div class="panel b-a">
+                        <h4 class="font-thin padder">Latest Tweets</h4>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <p>Wellcome <a href class="text-info">@Drew Wllon</a> and play this web application template, have fun1 </p>
+                                <small class="block text-muted"><i class="fa fa-fw fa-clock-o"></i> 2 minuts ago</small>
+                            </li>
+                            <li class="list-group-item">
+                                <p>Morbi nec <a href class="text-info">@Jonathan George</a> nunc condimentum ipsum dolor sit amet, consectetur</p>
+                                <small class="block text-muted"><i class="fa fa-fw fa-clock-o"></i> 1 hour ago</small>
+                            </li>
+                            <li class="list-group-item">
+                                <p><a href class="text-info">@Josh Long</a> Vestibulum ullamcorper sodales nisi nec adipiscing elit. Morbi id neque quam. Aliquam sollicitudin venenatis</p>
+                                <small class="block text-muted"><i class="fa fa-fw fa-clock-o"></i> 2 hours ago</small>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- To Follow Admin -->
+                    <div class="panel b-light clearfix">
+                        <div class="panel-body">
+                            <a href class="thumb pull-left m-r">
+                                <img src="{{ url_for('static', filename='img/a0.jpg') }}" class="img-circle">
+                            </a>
+                            <div class="clear">
+                                <a href class="text-info">@Mike Mcalidek <i class="fa fa-twitter"></i></a>
+                                <small class="block text-muted">2,415 followers / 225 tweets</small>
+                                <a href class="btn btn-xs btn-success m-t-xs">Follow</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+
+{% endblock %}

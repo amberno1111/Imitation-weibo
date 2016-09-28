@@ -1,0 +1,7 @@
+{% extends "auth/settings_base.html" %}
+{% block middle_form %}
+    <p style="font-family: 微软雅黑,宋体, 'New York';font-size: 20px;">真实姓名: {{ current_user.real_name }}</p>
+    <p style="font-family: 微软雅黑,宋体, 'New York';font-size: 20px;">所在城市: {{ current_user.location }}</p>
+    <p style="font-family: 微软雅黑,宋体, 'New York';font-size: 20px;">注册时间: {{ current_user.member_since }}</p>
+    <p style="font-family: 微软雅黑,宋体, 'New York';font-size: 20px;">个人简介: {{ current_user.about_me }}</p>
+{% endblock %}

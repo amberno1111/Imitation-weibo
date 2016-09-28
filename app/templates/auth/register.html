@@ -1,14 +1,105 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+{% from "_formhelpers.html" import render_field %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imitation-weibo 登陆</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/login.css') }}">
+    <!-- 图标 -->
+    <link rel="shortcut icon" href="{{ url_for('static', filename = 'img/weibo.png') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename = 'img/weibo.png') }}" type="image/x-icon">
+</head>
+<body>
 
-{% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}Register{% endblock %}
 
-{% block page_content %}
-    <div class="page-header">
-        <h1>注册</h1>
+
+<div class="index-main">
+    <div class="index-main-body">
+        <!-- logo -->
+        <div class="index-header">
+            <h1 class="logo"></h1>
+            <h2 class="subtitle">一个基于Python-Flask的微博</h2>
+        </div>
+        <!-- 登陆注册框 -->
+        <div class="sign-flow">
+            <!-- 登陆注册logo -->
+            <div class="sign-nav" data-index="0">
+                <div class="nav-slider" style="display: inline-block; position: relative">
+                    <a href="{{ url_for('auth.register') }}" >注册</a>
+                    <a href="{{ url_for('auth.login') }}" >登录</a>
+
+                    <span class="nav-slider-bar"></span>
+                </div>
+            </div>
+            {% for message in get_flashed_messages() %}
+                <div class="alert alert-warning">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    {{ message }}
+                </div>
+            {% endfor %}
+
+
+
+            <div class="sign-lognup" style="display: block">
+
+                <form method="post" action="register" novalidate="novalidate">
+                    {{ register_form.hidden_tag() }}
+
+
+                        <div class="input-wrapper" >
+
+                            {{ render_field(register_form.username, placeholder="用户名") }}
+                            {{ render_field(register_form.email, placeholder="邮箱") }}
+
+                            {{ render_field(register_form.password, placeholder="密码") }}
     </div>
-    <div class="col-md-4">
-        {{ wtf.quick_form(form) }}
+
+
+                    <div class="button-wrapper">
+                        {{ render_field(register_form.submit, class="sign-btn") }}
+                    </div>
+                </form>
+                </div>
+
+
+
+
+            </div>
+        </div>
     </div>
-{% endblock %}
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 底部 -->
+<div class="footer">
+    <span>@2016 Imitation-weibo</span>
+    <span class="dot">·</span>
+    <a target="_blank" href="{{ url_for('main.index') }}">首页</a>
+    <span class="dot">·</span>
+    <a target="_blank" href="#">联系我</a>
+</div>
+
+<canvas id="canvas" style="position: absolute; top: 0; left: 0; z-index: -1"></canvas>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+<script src="{{ url_for('static', filename='js/canvas.js') }}"></script>
+</body>
+</html>

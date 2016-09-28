@@ -1,78 +1,352 @@
 {% extends "bootstrap/base.html" %}
-
-{% block title %}Imitation-Weibo{% endblock %}
-
+{% from "_formhelpers.html" import render_field %}
+{% from "_paginations.html" import pagination_widget %}
 {% block head %}
-{{ super() }}
-<link rel="shortcut icon" href="{{ url_for('static', filename='weibo.png') }}" type="image/x-icon">
-<link rel="icon" href="{{ url_for('static', filename='weibo.png') }}" type="image/x-icon">
-{% endblock %}
+    <title>{% block title %}
+        微博-随时随地发现新鲜事
+    {% endblock %}</title>
 
-{% block navbar %}
-<div class="navbar navbar-default" role="navigation">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">Weibo</a>
-        </div>
-        <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-                <li><a href="/">Home</a></li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                {% if current_user.is_authenticated %}
-                    <li>
-                        <a href="{{ url_for('auth.logout') }}">Sign Out</a>
-                    </li>
-                {% else %}
-                    <li>
-                        <a href="{{ url_for('auth.login') }}">Sign In</a>
-                    </li>
-                {% endif %}
-                {% if current_user.is_authenticated %}
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        Account
-                        <b class="caret">
-                        </b>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a href="{{ url_for('auth.change_password') }}">更改密码</a>
-                        </li>
-
-                        <li>
-                            <a href="{{ url_for('main.user_profile', username=current_user.username) }}">个人资料</a>
-                        </li>
-
-                    </ul>
-                </li>
-                {% endif %}
-            </ul>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block content%}
-<div class="container">
-    {% for message in get_flashed_messages() %}
-        <div class="alert alert-warning">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            {{ message }}
-        </div>
-    {% endfor %}
-    {% block page_content %}
+    {% block metas %}
+        <meta charset="utf-8">
+        <meta name="description" content="一个基于Python-Flask框架搭建的网站">
+        <meta name="author" content="蒋昂波(amberno1111@hotmail.com)">
     {% endblock %}
-</div>
+
+    {% block styles %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" type="text/css" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/animate.css') }}" type="text/css" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}" type="text/css" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/simple-line-icons.css') }}" type="text/css" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/font.css') }}" type="text/css" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" type="text/css" />
+    {% endblock %}
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename = 'img/weibo.png') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename = 'img/weibo.png') }}" type="image/x-icon">
+
 {% endblock %}
 
-{% block scripts %}
-{{ super() }}
-{{ moment.include_moment() }}
+{% block body %}
+    <canvas id="canvas"></canvas>
+    {% block navbar %}
+        <div class="app-header navbar navbar-fixed-top">
+            <div class="container-fluid">
+                <!-- navbar collapse -->
+                <div class="collapse pos-rlt navbar-collapse box-shadow bg-white-only">
+                    <!-- link and dropdown -->
+                    <ul class="nav navbar-nav hidden-sm">
+                        <li class="dropdown pos-stc">
+                            <a href="#" data-toggle="dropdown" class="dropdown-toggle"><span>Mega</span><span class="caret"></span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu wrapper w-full bg-white">
+                                <div class="row">
+                                    <!-- Pages -->
+                                    <div class="col-sm-4">
+                                        <div class="m-l-xs m-t-xs m-b-xs font-bold">Pages <span class="badge badge-sm bg-success">10</span>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-xs-6">
+                                                <ul class="list-unstyled l-h-2x">
+                                                    <li>
+                                                        <a href><i class="fa fa-fw fa-angle-right text-muted m-r-xs"></i>Profile
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-xs-6">
+                                                <ul class="list-unstyled l-h-2x">
+                                                    <li>
+                                                        <a href><i class="fa fa-fw fa-angle-right text-muted m-r-xs"></i>Profile
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- UI Kits -->
+                                    <div class="col-sm-4 b-l b-light">
+                                        <div class="m-l-xs m-t-xs m-b-xs font-bold">UI Kits <span class="label label-sm bg-primary">12</span>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-xs-6">
+                                                <ul class="list-unstyled l-h-2x">
+                                                    <li>
+                                                        <a href><i class="fa fa-fw fa-angle-right text-muted m-r-xs"></i>Profile
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-xs-6">
+                                                <ul class="list-unstyled l-h-2x">
+                                                    <li>
+                                                        <a href><i class="fa fa-fw fa-angle-right text-muted m-r-xs"></i>Profile
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Analysis -->
+                                    <div class="col-sm-4 b-l b-light">
+                                        <div class="m-l-xs m-t-xs m-b-sm font-bold">Analysis
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-xs-6">
+                                                <ul class="list-unstyled l-h-2x">
+                                                    <li>
+                                                        <a href><i class="fa fa-fw fa-angle-right text-muted m-r-xs"></i>Profile
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-xs-6">
+                                                <ul class="list-unstyled l-h-2x">
+                                                    <li>
+                                                        <a href><i class="fa fa-fw fa-angle-right text-muted m-r-xs"></i>Profile
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" data-toggle="dropdown" class="dropdown-toggle">
+                                <i class="fa fa-fw fa-plus visible-xs-inline-block"></i>
+                                <span translate="header.navbar.new.NEW">New</span> <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li>
+                                    <a href="#" translate="header.navbar.new.PROJECT">Projects</a>
+                                </li>
+                                <li>
+                                    <a href="#"><span class="badge bg-info pull-right">5</span><span translate="header.navbar.new.TASK">Task</span>
+                                    </a>
+                                </li>
+                                <li class="divider"></li>
+                                <li>
+                                    <a href="#"><span class="badge bg-danger pull-right">4</span><span translate="header.navbar.new.EMAIL">Email</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <!-- / link and dropdown -->
+                    <!-- search form -->
+                    <form class="navbar-form navbar-form-sm navbar-left shift" ui-shift="prependTo" data-target=".navbar-collapse" role="search" ng-controller="TypeaheadDemoCtrl">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <input type="text" ng-model="selected" typeahead="state for state in states | filter:$viewValue | limitTo:8" class="form-control input-sm bg-light no-border rounded padder" placeholder="Search projects...">
+                                <span class="input-group-btn">
+                				<button type="submit" class="btn btn-sm bg-light rounded"><i class="fa fa-search"></i></button>
+              				</span>
+                            </div>
+                        </div>
+                    </form>
+                    <!-- / search form -->
+                    <!-- navbar right -->
+                    <ul class="nav navbar-nav navbar-right">
+                        <!-- 消息通知 -->
+                        {% if current_user.is_authenticated %}
+                            <li class="dropdown">
+                                <a href="#" data-toggle="dropdown" class="dropdown-toggle">
+                                    <i class="icon-bell fa-fw"></i>
+                                    <span class="visible-xs-inline">Notifications</span>
+                                    <span class="badge badge-sm up bg-danger pull-right-xs">2</span>
+                                </a>
+                                <div class="dropdown-menu w-xl animated fadeInUp">
+                                    <div class="panel bg-white">
+                                        <div class="panel-heading b-light bg-light">
+                                            <strong>You have <span>2</span> notifications</strong>
+                                        </div>
+                                        <div class="list-group">
+                                            <a href class="media list-group-item">
+                    					<span class="pull-left thumb-sm">
+                                            {% if current_user.avatar %}
+                                <img src="../static/img/avatar/{{ current_user.avatar }}" class="img-circle" alt="...">
+                                {% else %}
+                                    <img src="../static/img/avatar/avatar.jpg" class="img-circle" alt="...">
+                                {% endif %}
+
+
+                    					</span>
+                                                <span class="media-body block m-b-none">Use awesome animate.css<br>
+                      						<small class="text-muted">10 minutes ago</small>
+                    					</span>
+                                            </a>
+                                            <a href class="media list-group-item">
+                    					<span class="media-body block m-b-none">1.0 initial released<br>
+                      						<small class="text-muted">1 hour ago</small>
+                    					</span>
+                                            </a>
+                                        </div>
+                                        <div class="panel-footer text-sm">
+                                            <a href class="pull-right"><i class="fa fa-cog"></i></a>
+                                            <a href="#notes" data-toggle="class:show animated fadeInRight">See all the notifications</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <!-- 账户 -->
+                            <li class="dropdown">
+                                <a href="#" data-toggle="dropdown" class="dropdown-toggle clear" data-toggle="dropdown">
+              				<span class="thumb-sm avatar pull-right m-t-n-sm m-b-n-sm m-l-sm">
+                			{% if current_user.avatar %}
+                                <img src="../static/img/avatar/{{ current_user.avatar }}" class="img-circle" alt="...">
+                                {% else %}
+                                    <img src="../static/img/avatar/avatar.jpg" class="img-circle" alt="...">
+                                {% endif %}
+                                <i class="on md b-white bottom"></i>
+              				</span>
+                                    <span class="hidden-sm hidden-md">{{ current_user.username }}</span> <b class="caret"></b>
+                                </a>
+                                <ul class="dropdown-menu animated fadeInRight w">
+                                    <li class="wrapper b-b m-b-sm bg-light m-t-n-xs">
+                                        <div><p>300mb of 500mb used</p></div>
+                                        <progressbar value="60" class="progress-xs m-b-none bg-white"></progressbar>
+                                    </li>
+                                    <li><a href="{{ url_for('auth.settings') }}">
+                                        <span>Settings</span>
+                                    </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ url_for('main.users', username=current_user.username) }}" ui-sref="app.page.profile">Profile</a>
+                                    </li>
+                                    <li>
+                                        <a ui-sref="app.docs">
+                                            <span class="label bg-info pull-right">new</span>Help
+                                        </a>
+                                    </li>
+                                    <li class="divider"></li>
+                                    <li>
+                                        <a ui-sref="access.signin" href="{{ url_for('auth.logout') }}">Logout</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a> </a></li>
+                        {% else %}
+                            <li><a href="{{ url_for('auth.login') }}">登录</a> </li>
+                            <li><a href="{{ url_for('auth.register') }}">注册</a> </li>
+                            <li><a> </a></li>
+                        {% endif %}
+                    </ul>
+                    <!-- / navbar right -->
+                </div>
+                <!-- / navbar collapse -->
+            </div>
+        </div>
+    {% endblock navbar%}
+
+    {% block content %}
+        <div class="container main-page">
+            {% for message in get_flashed_messages() %}
+                <div class="alert alert-warning">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    {{ message }}
+                </div>
+            {% endfor %}
+            <div class="hbox hbox-auto-xs hbox-auto-sm">
+                <!-- 左边内容主页面 -->
+                {% block page_content %}
+                {% endblock %}
+                <!-- 右边广告和推荐信息 -->
+                {% block right_sidebar %}
+                    <!-- hidden-print hidden-xs hidden-sm这些属性可以使得在屏幕变小的时候，自动隐藏右边的栏 -->
+                    <div class="col w-lg bg-light lter b-l bg-auto hidden-print hidden-xs hidden-sm">
+                        <div class="wrapper">
+                            <!-- Who to Follow -->
+                            <div class="">
+                                <h4 class="m-t-xs m-b-xs">Who to follow</h4>
+                                <ul class="list-group no-bg no-borders pull-in">
+                                    <li class="list-group-item">
+                                        <a herf class="pull-left thumb-sm avatar m-r">
+                                            <img src="{{ url_for('static', filename='img/a4.jpg') }}" alt="..." class="img-circle">
+                                            <i class="on b-white bottom"></i>
+                                        </a>
+                                        <div class="clear">
+                                            <div><a href>Chris Fox</a></div>
+                                            <small class="text-muted">Designer, Blogger</small>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <a herf class="pull-left thumb-sm avatar m-r">
+                                            <img src="{{ url_for('static', filename='img/a5.jpg') }}" alt="..." class="img-circle">
+                                            <i class="on b-white bottom"></i>
+                                        </a>
+                                        <div class="clear">
+                                            <div><a href>Mogen Polish</a></div>
+                                            <small class="text-muted">Writter, Mag Editor</small>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <a herf class="pull-left thumb-sm avatar m-r">
+                                            <img src="{{ url_for('static', filename='img/a6.jpg') }}" alt="..." class="img-circle">
+                                            <i class="busy b-white bottom"></i>
+                                        </a>
+                                        <div class="clear">
+                                            <div><a href>Joge Lucky</a></div>
+                                            <small class="text-muted">Art director, Movie Cut</small>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <a herf class="pull-left thumb-sm avatar m-r">
+                                            <img src="{{ url_for('static', filename='img/a7.jpg') }}" alt="..." class="img-circle">
+                                            <i class="away b-white bottom"></i>
+                                        </a>
+                                        <div class="clear">
+                                            <div><a href>Folisise Chosielie</a></div>
+                                            <small class="text-muted">Musician, Player</small>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <!-- Latest Tweets -->
+                            <div class="panel b-a">
+                                <h4 class="font-thin padder">Latest Tweets</h4>
+                                <ul class="list-group">
+                                    <li class="list-group-item">
+                                        <p>Wellcome <a href class="text-info">@Drew Wllon</a> and play this web application template, have fun1 </p>
+                                        <small class="block text-muted"><i class="fa fa-fw fa-clock-o"></i> 2 minuts ago</small>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <p>Morbi nec <a href class="text-info">@Jonathan George</a> nunc condimentum ipsum dolor sit amet, consectetur</p>
+                                        <small class="block text-muted"><i class="fa fa-fw fa-clock-o"></i> 1 hour ago</small>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <p><a href class="text-info">@Josh Long</a> Vestibulum ullamcorper sodales nisi nec adipiscing elit. Morbi id neque quam. Aliquam sollicitudin venenatis</p>
+                                        <small class="block text-muted"><i class="fa fa-fw fa-clock-o"></i> 2 hours ago</small>
+                                    </li>
+                                </ul>
+                            </div>
+                            <!-- To Follow Admin -->
+                            <div class="panel b-light clearfix">
+                                <div class="panel-body">
+                                    <a href class="thumb pull-left m-r">
+                                        <img src="{{ url_for('static', filename='img/a0.jpg') }}" class="img-circle">
+                                    </a>
+                                    <div class="clear">
+                                        <a href class="text-info">@Mike Mcalidek <i class="fa fa-twitter"></i></a>
+                                        <small class="block text-muted">2,415 followers / 225 tweets</small>
+                                        <a href class="btn btn-xs btn-success m-t-xs">Follow</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endblock %}
+            </div>
+        </div>
+    {% endblock %}
+
+    {% block scripts %}
+        <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/canvas.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/comment.js') }}"></script>
+        {{ moment.include_moment(local_js='../static/js/moment.js') }}
+    {% endblock %}
 {% endblock %}
+
+

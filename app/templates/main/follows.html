@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+    <div class="col">
+        <!-- 上方图片或发表框 -->
+        <div style="background:transparent; background-size:cover">
+            <div class="wrapper-lg bg-white-opacity">
+                <div class="row m-t">
+                    <!-- 左边用户信息 -->
+                    <div class="col-sm-7">
+                        <!-- 头像 -->
+                        <a href="{{ url_for('main.users', username=user.username) }}" class="thumb-lg pull-left m-r">
+                            {% if user.avatar %}
+                                <img src="../static/img/avatar/{{ user.avatar }}" class="img-circle" alt="...">
+                            {% else %}
+                                <img src="../static/img/avatar/avatar.jpg" class="img-circle" alt="...">
+                            {% endif %}
+                        </a>
+                        <!-- 其他信息 -->
+                        <div class="clear m-b">
+                            <!-- 名字 -->
+                            <div class="m-b m-t-sm">
+                                <span class="h3 text-black">{{ user.username }}</span>
+                                {% if user.location %}
+                                    <small class="m-l">{{ user.location }}</small>
+                                {% endif %}
+                            </div>
+                            <!-- 个人简介 -->
+                            {% if  user.about_me  %}
+                                <p class="m-b">
+                                    {{ user.about_me }}
+                                </p>
+                            {% endif %}
+                            <!-- 关注按钮 -->
+                            {% if current_user.can(Permission.FOLLOW) and user != current_user %}
+                                {% if current_user.is_following(user) %}
+                                    <a href="{{ url_for('main.unfollow', username=user.username) }}" class="btn btn-sm btn-success btn-rounded">取消关注</a>
+                                {% else %}
+                                    <a href="{{ url_for('main.follow', username=user.username) }}" class="btn btn-sm btn-success btn-rounded">关注</a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <!-- 右边用户粉丝信息 -->
+                    <div class="col-sm-5">
+                        <div class="pull-right pull-none-xs text-center">
+                            <a href="{{ url_for('main.followers', username=user.username) }}" class="m-b-md inline m"><span class="h3 block font-bold">{{ user.followers.count() }}</span><small>粉丝</small></a>
+                            <a href="{{ url_for('main.followed', username=user.username) }}" class="m-b-md inline m"><span class="h3 block font-bold">{{ user.followed.count() }}</span><small>关注</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 中间导航条 -->
+        <div class="wrapper bg-white b-b">
+            <ul class="nav nav-pills nav-sm">
+                {% if endpoint=='main.followers' %}
+                    <li class="active"><a href="{{ url_for('main.followers', username=user.username) }}">粉丝</a></li>
+                    <li><a href="{{ url_for('main.followed', username=user.username) }}">关注</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('main.followers', username=user.username) }}">粉丝</a></li>
+                    <li class="active"><a href="{{ url_for('main.followed', username=user.username) }}">关注</a></li>
+                {% endif %}
+                <li><a href>Messages</a></li>
+            </ul>
+        </div>
+        <!-- 下方列表 -->
+        <div class="padder">
+            <div class="streamline b-l b-info m-l-lg m-b padder-v">
+                <!-- 导入粉丝/关注列表 -->
+                <ul class="follows">
+                    {% for follow in follows %}
+                        <!-- 文字微博和一句话神回复 -->
+                        <li>
+                            <!-- 头像 -->
+                            <a class="pull-left thumb-sm avatar m-l-n-md" href="{{ url_for('main.users', username=follow.user.username) }}">
+
+                                <img src="../static/img/avatar/{{ follow.user.avatar }}" class="img-circle" alt="...">
+
+                            </a>
+                            <div class="m-l-lg">
+                                <!-- 昵称和发表时间 -->
+                                <div class="m-b-xs">
+                                    <a href="{{ url_for('main.users', username=follow.user.username) }}" class="h4">{{ follow.user.username }}</a>
+                                    <span class="text-muted m-l-sm pull-right"> {{ moment( follow.timestamp).fromNow() }}</span>
+                                </div>
+                                <!-- 微博内容 -->
+                                <div class="m-b">
+                                    <p>简介：{{ follow.user.about_me }}</p>
+                                    <p>地区：{{ follow.user.location }}</p>
+                                    <!-- 工具条 -->
+                                    <div>
+                                    {% if current_user.can(Permission.FOLLOW) and follow.user != current_user %}
+                                        {% if current_user.is_following(follow.user) %}
+                                            <a href="{{ url_for('main.unfollow', username=follow.user.username) }}" class="btn btn-sm btn-success btn-rounded">取消关注</a>
+                                        {% else %}
+                                            <a href="{{ url_for('main.follow', username=follow.user.username) }}" class="btn btn-sm btn-success btn-rounded">关注</a>
+                                        {% endif %}
+                                    {% endif %}
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </li>
+                    {% endfor %}
+
+                </ul>
+                {{ pagination_widget(pagination, endpoint, username=user.username) }}
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

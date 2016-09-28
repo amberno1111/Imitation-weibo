@@ -1,0 +1,62 @@
+{% extends "base.html" %} {% block page_content %}
+<div class="col">
+    <!-- 下方文章列表 -->
+    <div class="padder">
+        <div class="streamline b-l b-info m-l-lg m-b padder-v">
+            <!-- 导入文章列表模板 -->
+            <ul class="posts">
+                {% for post in posts %}
+                <!-- 文字微博和一句话神回复 -->
+                <li>
+                    <!-- 头像 -->
+                    <a class="pull-left thumb-sm avatar m-l-n-md" href="{{ url_for('main.users', username=post.author.username) }}">
+                        <img src="../static/img/avatar/{{ post.author.avatar }}" class="img-circle" alt="...">
+                    </a>
+                    <div class="m-l-lg">
+                        <!-- 昵称和发表时间 -->
+                        <div class="m-b-xs">
+                            <a href="{{ url_for('main.users', username=post.author.username) }}" class="h4">{{ post.author.username }}</a>
+                            <span class="text-muted m-l-sm pull-right"> {{ moment( post.timestamp).fromNow() }}</span>
+                        </div>
+                        <!-- 微博内容 -->
+                        <div class="m-b">
+                            <p>{{ post.body }}</p>
+                            <!-- 工具条 -->
+                            <div class="m-t-sm">
+                                <a href class="text-muted m-xs"><i class="icon-action-redo">转发</i></a>
+                                <a href class="text-muted m-xs"><i class="icon-star"></i>收藏</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 评论 -->
+                    <div class="m-l-lg" id="comment-block" class="comment-app-holder">
+                        <div class="_commentBox-list">
+                            {% include "_comments.html" %}
+                        </div>
+                    </div>
+
+                    <div class="panel panel-default m-t-md m-b-n-sm pos-rlt" style="margin: 10px 10px 0px 50px;">
+
+                
+                    <form  method="post">
+                    <div style="height: 80px;">
+                        {{ form.hidden_tag() }}
+                        {{ render_field(form.body,class="form-control no-border",rows="6",placeholder="说几句呗...") }}
+                        </div>
+                    <div class="panel-footer bg-light lter">
+                        {{ render_field(form.submit, class="btn btn-info pull-right btn-sm") }}
+                        <ul class="nav nav-pills nav-sm">
+                            <li><a href><i class="fa fa-camera text-muted"></i></a></li>
+                            <li><a href><i class="fa fa-video-camera text-muted"></i></a></li>
+                        </ul>
+                    </div>
+                    </form>
+            </div>
+
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

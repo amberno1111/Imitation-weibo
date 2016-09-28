@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+    <div class="col">
+        <!-- 上方图片或发表框 -->
+        {% if current_user.can(Permission.WRITE_ARTICLE) %}
+
+
+            <div class="panel panel-default m-t-md m-b-n-sm pos-rlt" style="margin: 10px 10px 0px 10px;">
+
+                    <div style="margin: 10px">
+                        <img src="../static/img/index-logo.png" width="200px" height="20px" />
+                    </div>
+                    <form  method="post">
+                        {{ form.hidden_tag() }}
+                        {{ render_field(form.body,class="form-control no-border",style="padding-left: 20px;", rows="6",placeholder="说几句呗...") }}
+                    <div class="panel-footer bg-light lter">
+                        {{ render_field(form.submit, class="btn btn-info pull-right btn-sm") }}
+                        <ul class="nav nav-pills nav-sm">
+                            <li><a href><i class="fa fa-camera text-muted"></i></a></li>
+                            <li><a href><i class="fa fa-video-camera text-muted"></i></a></li>
+                        </ul>
+                    </div>
+                    </form>
+            </div>
+
+
+        {% else %}
+            <div style="background: transparent; background-size:cover">
+                <div class="wrapper-lg bg-white-opacity">
+                    <div class="row m-t">
+                        <!-- 左边用户信息 -->
+                        <div class="col-sm-7">
+                            <!-- 头像 -->
+                            <a href class="thumb-lg pull-left m-r"><img src="{{ url_for('static', filename='img/a0.jpg') }}" class="img-circle">
+                            </a>
+                            <!-- 其他信息 -->
+                            <div class="clear m-b">
+                                <!-- 名字 -->
+                                <div class="m-b m-t-sm">
+                                    <span class="h3 text-black">John.Smith</span>
+                                    <small class="m-l">London, UK</small>
+                                </div>
+                                <!-- 社交网络链接 -->
+                                <p class="m-b">
+                                    <a href class="btn btn-sm btn-bg btn-rounded btn-default btn-icon"><i class="fa fa-twitter"></i></a>
+                                    <a href class="btn btn-sm btn-bg btn-rounded btn-default btn-icon"><i class="fa fa-facebook"></i></a>
+                                    <a href class="btn btn-sm btn-bg btn-rounded btn-default btn-icon"><i class="fa fa-google-plus"></i></a>
+                                </p>
+                                <!-- 关注按钮 -->
+                                <a href class="btn btn-sm btn-success btn-rounded">Follow
+                                </a>
+                            </div>
+                        </div>
+                        <!-- 右边用户粉丝信息 -->
+                        <div class="col-sm-5">
+                            <div class="pull-right pull-none-xs text-center">
+                                <a href class="m-b-md inline m"><span class="h3 block font-bold">2k</span><small>Followers</small></a>
+                                <a href class="m-b-md inline m"><span class="h3 block font-bold">250</span><small>Following</small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% endif %}
+        <!-- 中间导航条 -->
+        <div class="wrapper bg-white b-b">
+            <ul class="nav nav-pills nav-sm">
+
+                <li{% if not show_followed %} class="active"{% endif %}><a href="{{ url_for('main.show_all') }}">全部微博</a></li>
+                {% if current_user.is_authenticated %}
+        <li{% if show_followed %} class="active"{% endif %}><a href="{{ url_for('main.show_followed') }}">我的关注</a></li>
+        {% endif %}
+
+
+            </ul>
+        </div>
+        <!-- 下方文章列表 -->
+        <div class="padder">
+            <div class="streamline b-l b-info m-l-lg m-b padder-v">
+                <!-- 导入文章列表模板 -->
+                {% include "_posts.html" %}
+                {{ pagination_widget(pagination, 'main.index') }}
+            </div>
+        </div>
+    </div>
+{% endblock %}

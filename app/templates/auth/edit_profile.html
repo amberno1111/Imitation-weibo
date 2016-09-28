@@ -1,0 +1,28 @@
+{% extends "auth/settings_base.html" %}
+{% block middle_form %}
+    <div class="panel panel-default">
+        <div class="panel-heading font-bold">修改资料</div>
+        <div class="panel-body">
+            <form role="form" method="post">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    <p>昵称</p>
+                    {{ render_field(form.username, class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <p>真实姓名</p>
+                    {{ render_field(form.real_name,class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <p>所在城市</p>
+                    {{ render_field(form.location,class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <p>个人简介</p>
+                    {{ render_field(form.about_me,class="form-control") }}
+                </div>
+                {{ render_field(form.submit, class="btn btn-sm btn-primary") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

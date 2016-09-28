@@ -1,31 +1,115 @@
+
 <ul class="posts">
     {% for post in posts %}
-    <li class="post">
-        <div class="post-content">
-            <div class="post-date">{{ moment(post.timestamp).fromNow() }}</div>
-            <div class="post-author"><a href="{{ url_for('.user_profile', username=post.author.username) }}">{{ post.author.username }}</a></div>
-            <div class="post-body">
-                {% if post.body_html %}
-                    {{ post.body_html | safe }}
-                {% else %}
-                    {{ post.body }}
-                {% endif %}
+        <!-- 文字微博和一句话神回复 -->
+        <li>
+            <!-- 头像 -->
+            <a class="pull-left thumb-sm avatar m-l-n-md" href="{{ url_for('main.users', username=post.author.username) }}">
+                <img src="../static/img/avatar/{{ post.author.avatar }}" class="img-circle" alt="...">
+            </a>
+            <div class="m-l-lg">
+                <!-- 昵称和发表时间 -->
+                <div class="m-b-xs">
+                    <a href="{{ url_for('main.users', username=post.author.username) }}" class="h4">{{ post.author.username }}</a>
+                    <span class="text-muted m-l-sm pull-right"> {{ moment( post.timestamp).fromNow() }}</span>
+                </div>
+                <!-- 微博内容 -->
+                <div class="m-b">
+                    <p>{{ post.body }}</p>
+                    <!-- 工具条 -->
+                    <div class="m-t-sm">
+                        <a href class="text-muted m-xs"><i class="icon-action-redo">转发</i></a>
+                        <a href class="text-muted m-xs"><i class="icon-star"></i>收藏</a>
+                        <a href="javascript:;" class="toggle-comment meta-item text-muted m-xs" num="133"><i class="icon-refresh"></i>神回复</a>
+                        <a href="{{ url_for('main.post', id=post.id) }}" class="text-muted m-xs" num="133"><i class="icon-refresh"></i>全部评论</a>
+                    </div>
+                </div>
             </div>
-            <div class="post-footer">
-                {% if current_user == post.author %}
-                <a href="{{ url_for('.edit', id=post.id) }}">
-                    <span class="label label-primary">Edit</span>
-                </a>
-                {% elif current_user.is_administrator() %}
-                <a href="{{ url_for('.edit', id=post.id) }}">
-                    <span class="label label-danger">Edit [Admin]</span>
-                </a>
-                {% endif %}
-                <a href="{{ url_for('main.post', id=post.id) }}">
-                    <span class="label label-default">Permalink</span>
-                </a>
+            <!-- 评论 -->
+            <div class="m-l-lg" id="comment-block" class="comment-app-holder" style="display: none">
+                <div class="_commentBox-list">
+                {% include "_comments.html" %}
+
+                </div>
+
+
+
+
+            </div>
+        </li>
+    {% endfor %}
+    <!-- 带图片的微博 -->
+    <li>
+        <a class="pull-left thumb-sm avatar m-l-n-md"><img src="{{ url_for('static', filename='img/a6.jpg') }}" class="img-circle" alt="...">
+        </a>
+        <div class="m-l-lg m-b-lg">
+            <div class="m-b-xs">
+                <a href class="h4">Jessica</a>
+                <span class="text-muted m-l-sm pull-right">3h ago
+                        			</span>
+            </div>
+            <div class="m-b">
+                <p>
+                    Cecteter adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet. ullamcorper sodales nisi nec adipiscing elit. Morbi id neque quam. Aliquam sollicitudin
+                </p>
+                <img src="{{ url_for('static', filename='img/c5.jpg') }}" class="b b-a wrapper-xs bg-white img-responsive">
+                <div class="m-t-sm">
+                    <a href class="text-muted m-xs"><i class="icon-action-redo"></i></a>
+                    <a href class="text-muted m-xs"><i class="icon-star"></i></a>
+                    <a href class="text-muted m-xs"><i class="icon-refresh"></i> 13</a>
+                </div>
+
+            </div>
+        </div>
+        <div class="m-l-lg">
+            <a class="pull-left thumb-sm avatar">
+                <img src="{{ url_for('static', filename='img/a5.jpg') }}" alt="...">
+            </a>
+            <div class="m-l-xxl panel b-a">
+                <div class="panel-heading pos-rlt">
+                    <span class="arrow left pull-up"></span>
+                    <span class="text-muted m-l-sm pull-right">10m ago</span>
+                    <a href>Mika Sam</a>Report this comment ishelpful
+                </div>
             </div>
         </div>
     </li>
-    {% endfor %}
+    <!-- 带有评论框的微博 -->
+    <li>
+        <!-- 头像 -->
+        <a class="pull-left thumb-sm avatar m-l-n-md">
+            <img src="{{ url_for('static', filename='img/a9.jpg') }}" class="img-circle" alt="...">
+        </a>
+
+        <div class="m-l-lg">
+            <!-- 昵称和发表时间 -->
+            <div class="m-b-xs">
+                <a href class="h4">John smith</a>
+                <span class="text-muted m-l-sm pull-right">Just now
+                        			</span>
+            </div>
+            <div class="m-b">
+                <p>Lorem ipsum dolor sit amet, consecteter adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet. ullamcorper sodales nisi nec adipiscing elit. Morbi id neque quam. Aliquam sollicitudin</p>
+                <!-- 工具条 -->
+                <div class="m-t-sm">
+                    <a href class="text-muted m-xs"><i class="icon-action-redo">转发</i></a>
+                    <a href class="text-muted m-xs"><i class="icon-star"></i>收藏</a>
+                    <a href class="text-muted m-xs"><i class="icon-refresh"></i>评论</a>
+                </div>
+            </div>
+
+            <div class="panel panel-default m-t-md m-b-n-sm pos-rlt">
+                <form>
+                    <textarea class="form-control no-border" rows="3" placeholder="Your comment..."></textarea>
+                </form>
+                <div class="panel-footer bg-light lter">
+                    <button class="btn btn-info pull-right btn-sm">Comment</button>
+                    <ul class="nav nav-pills nav-sm">
+                        <li><a href><i class="fa fa-camera text-muted"></i></a></li>
+                        <li><a href><i class="fa fa-video-camera text-muted"></i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </li>
 </ul>

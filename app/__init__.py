@@ -1,43 +1,42 @@
 # -*- coding: utf-8 -*-
-from config import config
 from flask import Flask
-from flask_bootstrap import Bootstrap
+from config import config
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_bootstrap import Bootstrap
 from flask_mail import Mail
-from flask_pagedown import PageDown
-
-# 创建扩展类
-bootstrap = Bootstrap()
+# 创建扩展，暂时不进行初始化，因此不传入程序实例
 moment = Moment()
 db = SQLAlchemy()
-login_manager = LoginManager()
-login_manager.session_protection = 'strong'
-login_manager.login_view = 'auth.login'
+bootstrap = Bootstrap()
 mail = Mail()
-pagedown = PageDown()
+login_manager = LoginManager()
+login_manager.login_view = 'auth.login'
+login_manager.login_message = '请登录后访问'
+login_manager.session_protection = 'strong'
 
 
-# 工厂函数
 def create_app(config_name):
-    # 创建程序
+    """
+    :summary: 工厂函数，
+    :param config_name: 配置名
+    :return: app，程序实例
+    """
     app = Flask(__name__)
-    # 导入配置
+    # 使用Flask中app.config配置对象提供的from_object()方法可以从配置文件config.py中导入配置类
     app.config.from_object(config[config_name])
-    # 初始化配置
+    # 配置初始化
     config[config_name].init_app(app)
     # 初始化扩展
-    bootstrap.init_app(app)
     moment.init_app(app)
     db.init_app(app)
+    bootstrap.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
-    pagedown.init_app(app)
     # 注册蓝本
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
-    # 注册auth蓝本，加上一个前缀
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 

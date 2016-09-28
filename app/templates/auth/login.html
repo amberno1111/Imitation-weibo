@@ -1,69 +1,81 @@
-{% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}Sign In{% endblock %}
+<!DOCTYPE html>
+<html>
+{% from "_formhelpers.html" import render_field %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imitation-weibo 登陆</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/login.css') }}">
+    <!-- 图标 -->
+    <link rel="shortcut icon" href="{{ url_for('static', filename = 'img/weibo.png') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename = 'img/weibo.png') }}" type="image/x-icon">
+</head>
+<body>
 
-{% block page_content %}
-<div>
+<div class="index-main">
+    <div class="index-main-body">
+        <!-- logo -->
+        <div class="index-header">
+            <h1 class="logo"></h1>
+            <h2 class="subtitle">一个基于Python-Flask的微博</h2>
+        </div>
+        <!-- 登陆注册框 -->
+        <div class="sign-flow">
+            <!-- 登陆注册logo -->
+            <div class="sign-nav" data-index="0">
+                <div class="nav-slider" style="display: inline-block; position: relative">
+                    <a href="{{ url_for('auth.login') }}" >登录</a>
+                    <a href="{{ url_for('auth.register') }}" >注册</a>
+                    <span class="nav-slider-bar"></span>
+                </div>
+            </div>
+            {% for message in get_flashed_messages() %}
+                <div class="alert alert-warning">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    {{ message }}
+                </div>
+            {% endfor %}
+            <!-- 登陆 -->
+            <div class="sign-login" style="display: block">
 
-    <h1>登陆</h1>
-    <form class="form-horizontal"  action="/auth/login" method="POST" enctype="multipart/form-data">
-    <div class="form-group">
-        {{ form.hidden_tag() }}
-        <div class="col-md-4">
-        {{ form.email(class="form-control input-lg") }}
+                <form method="post" novalidate="novalidate">
+                    {{ login_form.hidden_tag() }}
+
+                    <div class="input-wrapper">
+                        {{ render_field(login_form.email,placeholder="邮箱") }}
+                        {{ render_field(login_form.password ,placeholder="密码") }}
+                    </div>
+
+                    <div class="button-wrapper">
+                        {{ render_field(login_form.submit, class="sign-btn") }}
+
+                    </div>
+                    <div class="signin-misc-wrapper clearFix">
+                        <div class="remember-me">
+                            {{ login_form.remember_me() }}{{ login_form.remember_me.label() }}
+                        </div>
+                        <a href="{{ url_for('auth.reset_password_request') }}" class="unable-login">忘记密码？</a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-    <div class="form-group">
-        <div class="col-md-4">
-        {{ form.password(class="form-control input-lg") }}
-        </div>
-    </div>
-    <div class="form-group">
-        <div class="col-md-4">
-        {{ form.submit(class="btn btn-primary btn-lg btn-block") }}
-        </div>
-    </div>
-    <div class="form-group">
-        <div class="col-md-4">
-        {{ form.remember_me() }}
-        {{ form.remember_me.label }}
-        </div>
-    </div>
-</form>
 </div>
-{% endblock %}
 
+<!-- 底部 -->
+<div class="footer">
+    <span>@2016 Imitation-weibo</span>
+    <span class="dot">·</span>
+    <a target="_blank" href="{{ url_for('main.index') }}">首页</a>
+    <span class="dot">·</span>
+    <a target="_blank" href="#">联系我</a>
+</div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<canvas id="canvas" style="position: absolute; top: 0; left: 0; z-index: -1"></canvas>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+<script src="{{ url_for('static', filename='js/canvas.js') }}"></script>
+</body>
+</html>

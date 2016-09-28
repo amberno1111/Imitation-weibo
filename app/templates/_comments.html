@@ -1,0 +1,19 @@
+{% for comment in comments %}                      
+<div class="_commentBox-root-PQNS" style="background: transparent;">
+    <div  class="_commentBox-avatarLink">
+        <a class="pull-left thumb-sm avatar" href="{{ url_for('main.users', username=comment.author.username) }}">
+            <img src="../static/img/avatar/{{ comment.author.avatar }}" class="img-circle" alt="...">
+        
+    </a>
+    </div>
+    <div class="_commentItem_body" style="padding-left: 10px; background: transparent;">
+        <div class="_commentItem-header"><a href="{{ url_for('main.users', username=comment.author.username) }}">{{comment.author.username}}</a> </div>
+        <div class="_commentItem-content">{{comment.body}}</div>
+        <div class="_commentItem-footer">
+            <span class="_commentItem-links"><span>16</span><span>赞</span></span>
+            <time>{{ moment( comment.timestamp).fromNow() }}</time>
+        </div>
+    </div>
+</div>
+{% endfor %}
+

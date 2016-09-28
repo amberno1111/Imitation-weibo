@@ -1,6 +1,0 @@
-{{ user.username }}宝宝(•ω•)，你好啊：
-欢迎使用Imatation-weibo，请点击下面的链接验证你的账户：
-<a href="{{ url_for('auth.confirm', token=token, _external=True) }}">戳这里~~</a>
-如果你无法点击以上链接，请复制下面的网址到浏览器直接打开：
-{{ url_for('auth.confirm', token=token, _external=True) }}
-如果你并未申请Imatation-weibo账号，可能是其他用户误输入了你的邮箱地址。请忽略此邮件，或与我们联系。
